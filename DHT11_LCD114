@@ -1,0 +1,57 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+
+// Pin definitions
+#define TFT_CS    D2 // Chip select pin (optional)
+#define TFT_RST   D4 // Reset pin
+#define TFT_DC    D3 // Data/command pin
+#define DHTPIN    D6 // DHT data pin
+#define DHTTYPE   DHT11 // DHT 11 sensor type
+
+// Initialize the LCD and DHT
+Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  tft.init(135, 240); // Initialize display size 135x240
+  tft.setRotation(3); // Adjust as per your setup
+  tft.fillScreen(ST77XX_BLACK); // Clear screen
+  dht.begin(); // Initialize DHT sensor
+}
+
+void loop() {
+  float temperature = dht.readTemperature(); // Read temperature in Celsius
+
+  if (isnan(temperature)) {
+    tft.fillScreen(ST77XX_BLACK);
+    tft.setTextColor(ST77XX_RED);
+    tft.setCursor(10, 60);
+    tft.setTextSize(2);
+    tft.println("DHT Error!");
+    delay(2000);
+    return;
+  }
+
+  // Determine color based on temperature
+  uint16_t color;
+  if (temperature < 20) {
+    color = ST77XX_BLUE; // Cool
+  } else if (temperature < 30) {
+    color = ST77XX_YELLOW; // Warm
+  } else {
+    color = ST77XX_RED; // Hot
+  }
+
+  // Clear the screen
+  tft.fillScreen(ST77XX_BLACK);
+
+  // Display the temperature
+  tft.setTextColor(color);
+  tft.setTextSize(3);
+  tft.setCursor(10, 50);
+  tft.printf("Temp: %.1f C", temperature);
+
+  delay(2000); // Update every 2 seconds
+}
